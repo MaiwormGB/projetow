@@ -68,7 +68,7 @@ app.post('/produtos', async (request, response) => {
         const resultado = await pool.query(`
             insert into produto(nome, complemento)
             values ($1, $2)
-            returning *`
+            returning *`,
             [nome, complemento]
 
         )
@@ -137,7 +137,7 @@ app.put('/produtos/:id', async (request, response) => {
 
 });
 
-app.delete('produtos/:id', async (request, response) =>{
+app.delete('/produtos/:id', async (request, response) =>{
 
     const { id } = request.params;
 
@@ -184,7 +184,64 @@ app.get('/usuarios', async (request, response) => {
     return response.json(resultado.rows);
 });
 
+app.get('/registros', async (request, response) => {
 
+    const resultado = await pool.query(
+        'SELECT * FROM registro'
+    );
+
+    return response.json(resultado.rows)
+
+});
+
+app.post('/registros', async (request, response) => {
+
+    const {
+        usuario_id,
+        produto_id,
+        data_registro,
+        tipo,
+        quantidade
+    } = request.body
+
+    try {
+
+        const resultado = await pool.query(
+            `
+            INSERT INTO registro 
+            (
+                usuario_id,
+                produto_id,
+                data_registro,
+                tipo,
+                quantidade
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+            `,
+            [
+                usuario_id,
+                produto_id,
+                data_registro,
+                tipo,
+                quantidade
+            ]
+        );
+
+        return response.status(201).json(
+            resultado.rows[0]
+        );
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        return response.status(500).json({
+            mensagem: "Erro ao criar registro"
+        });
+    }
+
+})
 
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
